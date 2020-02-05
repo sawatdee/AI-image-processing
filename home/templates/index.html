@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AI</title>
+    <style>
+      body {
+    	background-image: url('https://img1.mashed.com/img/gallery/fast-food-workers-tell-us-what-we-should-never-order/intro-1511295215.jpg');
+    	background-size: cover;
+      }
+      .container {
+        /* background-color: red; */
+        padding: 24px 12px;
+      }
+      img {
+        min-width: 500px;
+        min-height: 500px;
+        max-width: 100%;
+        height: auto;
+        object-fit: cover;
+        background-color: lightgray;
+      }
+      .wrapper {
+        display: flex;
+        flex-direction: row;
+      }
+      .result {
+        width: 40%;
+      }
+      .image-wrapper {
+        /* background-color: red; */
+        width: 60%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .add-image-button {
+        /* position: absolute; */
+        padding: 12px;
+        background-color: lightgray;
+        font-size: 27px;
+        margin: 12px;
+        background-color: lightseagreen;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="wrapper">
+        <div class="result">
+          <table id="result" width="100%"></table>
+        </div>
+        <div class="image-wrapper">
+          <img id="image" />
+          <button id="pickupImageButton" class="add-image-button">
+            Add Image
+          </button>
+        </div>
+        <form id="formImage" method="POST" action="">
+          <input type="hidden" name="image" />
+        </form>
+        <input id="pickupImage" style="display: none;" type="file" />
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    
+    let pickupImageButtonEl = document.getElementById("pickupImageButton");
+    let imageEl = document.getElementById("image");
+    let pickupImageEl = document.getElementById("pickupImage");
+    let formImageEl = document.getElementById("formImage");
+    let resultEl = document.getElementById("result");
+
+    let image = "{{image}}";
+    let itemJson = "{{items}}"
+
+    if (image === "") {
+    } else {
+      imageEl.src = "{{image}}";
+    }
+    if(itemJson != ""){
+        let items = JSON.parse(itemJson.replace(/&quot;/g,"\""))
+        let newFormatItems = []
+        items.map(i => {
+            const foundIndex = newFormatItems.findIndex(io => io.name == i[0] )
+            if(foundIndex != -1){
+                newFormatItems[foundIndex].totalPrice += newFormatItems[foundIndex].price
+                newFormatItems[foundIndex].amount++
+            }else {
+                newFormatItems.push(
+                    {
+                        name: i[0],
+                        price: i[1],
+                        totalPrice: i[1],
+                        amount: 1
+                    }
+                )
+            }
+            
+        })
+        let totalPrice = 0
+        resultEl.innerHTML = `
+            <tr>
+                <td>รายการ</td>
+                <td>จำนวน</td>   
+                <td>ราคาต่อชิ้น</td>   
+                <td>ราคารวม</td>   
+            </tr>
+        `
+        newFormatItems.map(i => {
+            totalPrice += i.totalPrice
+            resultEl.innerHTML += `
+            <tr>
+                <td>${i.name}</td>
+                <td>${i.amount}</td>   
+                <td>${i.price}</td>   
+                <td>${i.totalPrice}</td>   
+            </tr>
+        `
+            // resultEl.innerHTML += `<h5>${i.name} ${i.amount} ${i.price} ${i.totalPrice} </h5>`
+        })
+        resultEl.innerHTML += `
+            <tr>
+                <td>
+                    <h3>รวม</h3>
+                </td>
+                <td></td>   
+                <td></td>   
+                <td>
+                    <h3>${totalPrice} บาท</h3>
+                </td>   
+            </tr>
+        `
+    }
+    pickupImageButtonEl.onclick = () => {
+      pickupImageEl.click();
+    };
+    const toBase64 = file =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+
+    pickupImageEl.onchange = async e => {
+      formImageEl[0].value = await toBase64(e.target.files[0]);
+      pickupImageButtonEl.innerText = "Loading..."
+      pickupImageButtonEl.disabled = true
+      formImageEl.submit();
+    };
+  </script>
+</html>
